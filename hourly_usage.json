@@ -1,0 +1,16 @@
+{
+  "2025-03-08": {
+    "13:00": {
+      "python.exe": 121.190572,
+      "pycharm64.exe": 449.25734900000003,
+      "msedge.exe": 771.2175199999999,
+      "explorer.exe": 13.011856
+    },
+    "14:00": {
+      "msedge.exe": 78.13364,
+      "pycharm64.exe": 12.021046,
+      "ShellExperienceHost.exe": 5.004076,
+      "explorer.exe": 2.002316
+    }
+  }
+}
