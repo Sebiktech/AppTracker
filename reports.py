@@ -1,3 +1,6 @@
+from datetime import datetime, timedelta
+from collections import defaultdict
+
 def generate_daily_report(self):
     date_str = self.daily_date.get() or datetime.now().strftime("%Y-%m-%d")
     try:

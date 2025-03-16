@@ -3,6 +3,7 @@ import hashlib
 import tkinter as tk
 import customtkinter
 import win32gui
+import win32ui
 import win32process
 import win32con
 import win32api
@@ -14,6 +15,10 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import pystray
 from PIL import Image
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+from tkinter import messagebox
 import io
 
 import reports
@@ -35,8 +40,8 @@ class App(customtkinter.CTk):
         # Initialize icon cache
         self.cache_dir = "icon_cache"
         os.makedirs(self.cache_dir, exist_ok=True)
-        self.icon_cache = {}
-        self.default_icon = self.create_default_icon()
+        self.default_icon_path = os.path.join(self.cache_dir, "default_icon.png")
+        self.create_default_icon()
 
         # Tray icon setup
         self.tray_icon = None
@@ -57,11 +62,15 @@ class App(customtkinter.CTk):
 
         # Create tabs
         self.realtime_tab = self.tabview.add("Real-time")
+        self.categories_tab = self.tabview.add("Categories")
         self.daily_tab = self.tabview.add("Daily Report")
         self.weekly_tab = self.tabview.add("Weekly Report")
 
         # Real-time Tab Content
         self.setup_realtime_tab()
+
+        # Add this after existing tab setups
+        self.setup_categories_tab()
 
         # Daily Report Tab
         self.setup_daily_report_tab()
@@ -101,12 +110,68 @@ class App(customtkinter.CTk):
         self.monitor_thread = threading.Thread(target=self.monitor_active_window)
         self.monitor_thread.start()
 
+        # Add chart variables
+        self.chart_figure = None
+        self.chart_canvas = None
+        self.chart_colors = plt.cm.tab10.colors
+        self.last_chart_update = datetime.now()
+
         # Start GUI updates
         self.update_gui()
 
     def setup_realtime_tab(self):
-        # ... [Keep existing real-time UI elements] ...
-        pass
+        # Create main frame
+        self.realtime_frame = customtkinter.CTkFrame(self.realtime_tab)
+        self.realtime_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Initialize matplotlib components
+        self.chart_figure = Figure(figsize=(8, 4), dpi=100)
+        self.chart_ax = self.chart_figure.add_subplot(111)
+
+        # Configure dark theme
+        self.chart_figure.patch.set_facecolor('#2b2b2b')
+        self.chart_ax.set_facecolor('#2b2b2b')
+
+        # Create canvas
+        self.chart_canvas = FigureCanvasTkAgg(self.chart_figure, self.realtime_frame)
+        self.chart_canvas.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
+
+    def setup_categories_tab(self):
+        # Main frame
+        self.categories_main_frame = customtkinter.CTkScrollableFrame(self.categories_tab)
+        self.categories_main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Category management section
+        self.category_management_frame = customtkinter.CTkFrame(self.categories_main_frame)
+        self.category_management_frame.pack(fill="x", pady=5)
+
+        # Add category section
+        self.new_category_entry = customtkinter.CTkEntry(self.category_management_frame,
+                                                         placeholder_text="New category name")
+        self.new_category_entry.pack(side="left", padx=5, pady=5)
+
+        self.add_category_btn = customtkinter.CTkButton(
+            self.category_management_frame,
+            text="Add Category",
+            command=self.add_new_category_manual
+        )
+        self.add_category_btn.pack(side="left", padx=5, pady=5)
+
+        # Categories list header
+        self.categories_header_frame = customtkinter.CTkFrame(self.categories_main_frame)
+        self.categories_header_frame.pack(fill="x", pady=(10, 2))
+        customtkinter.CTkLabel(self.categories_header_frame, text="Categories", font=("Arial", 12, "bold")).pack(
+            side="left", padx=5)
+
+        # Existing categories list
+        self.categories_list_frame = customtkinter.CTkFrame(self.categories_main_frame)
+        self.categories_list_frame.pack(fill="x", pady=2)
+
+        # Applications list
+        self.applications_frame = customtkinter.CTkFrame(self.categories_main_frame)
+        self.applications_frame.pack(fill="both", expand=True, pady=10)
+
+        self.update_categories_tab()
 
     def setup_daily_report_tab(self):
         # Date selection
@@ -139,6 +204,157 @@ class App(customtkinter.CTk):
 
         customtkinter.CTkButton(btn_frame, text="Generate", command=reports.generate_weekly_report).pack(side="left", padx=5)
         customtkinter.CTkButton(btn_frame, text="Export CSV", command=reports.export_weekly_csv).pack(side="left", padx=5)
+
+    def add_new_category_manual(self):
+        new_category = self.new_category_entry.get().strip()
+        if new_category:
+            if new_category not in self.category_data:
+                self.category_data[new_category] = 0.0
+                self.new_category_entry.delete(0, "end")
+                self.update_categories_tab()
+                self.save_data()
+            else:
+                messagebox.showwarning("Duplicate", "Category already exists!")
+        else:
+            messagebox.showwarning("Invalid", "Please enter a category name")
+
+    def update_categories_tab(self):
+        # Clear existing categories list
+        for widget in self.categories_list_frame.winfo_children():
+            widget.destroy()
+
+        # Create category rows
+        for category in sorted(self.category_data.keys()):
+            category_frame = customtkinter.CTkFrame(self.categories_list_frame)
+            category_frame.pack(fill="x", pady=2)
+
+            # Category name
+            name_label = customtkinter.CTkLabel(category_frame, text=category, width=200, height=50)
+            name_label.pack(side="left", padx=5)
+
+            # Edit button
+            edit_btn = customtkinter.CTkButton(
+                category_frame,
+                text="✏️",
+                width=30,
+                command=lambda c=category: self.edit_existing_category(c)
+            )
+            edit_btn.pack(side="left", padx=2)
+
+            # Delete button
+            delete_btn = customtkinter.CTkButton(
+                category_frame,
+                text="🗑️",
+                width=30,
+                fg_color="#ff4444",
+                hover_color="#cc0000",
+                command=lambda c=category: self.delete_category(c)
+            )
+            delete_btn.pack(side="left", padx=2)
+
+        # Update applications list
+        self.update_applications_list()
+
+    def handle_category_change(self, app_name, new_category):
+        if new_category == "Create New...":
+            dialog = customtkinter.CTkInputDialog(text="Enter new category name:", title="New Category")
+            new_category = dialog.get_input()
+            if not new_category:
+                return
+            if new_category not in self.category_data:
+                self.category_data[new_category] = 0.0
+
+        if new_category in self.category_data:
+            # Update category time totals
+            old_category = self.app_data[app_name]['category']
+            self.category_data[old_category] -= self.app_data[app_name]['total_time']
+            self.category_data[new_category] += self.app_data[app_name]['total_time']
+
+            # Update app data
+            self.app_data[app_name]['category'] = new_category
+
+            # Update UI and save
+            self.update_categories_tab()
+            self.update_gui()
+            self.save_data()
+        else:
+            messagebox.showwarning("Invalid", "Selected category doesn't exist")
+
+    def edit_existing_category(self, old_name):
+        dialog = customtkinter.CTkInputDialog(
+            text=f"New name for '{old_name}':",
+            title="Rename Category"
+        )
+        new_name = dialog.get_input()
+
+        if new_name and new_name != old_name:
+            if new_name in self.category_data:
+                messagebox.showwarning("Error", "Category already exists!")
+                return
+
+            # Update category data
+            self.category_data[new_name] = self.category_data.pop(old_name)
+
+            # Update app data
+            for app in self.app_data.values():
+                if app['category'] == old_name:
+                    app['category'] = new_name
+
+            self.save_data()
+            self.update_categories_tab()
+            self.update_gui()
+
+    def delete_category(self, category):
+        if category == "Uncategorized":
+            messagebox.showwarning("Error", "Cannot delete default category!")
+            return
+
+        if messagebox.askyesno("Confirm", f"Delete category '{category}'? Apps will be moved to 'Uncategorized'"):
+            # Reassign apps
+            for app in self.app_data.values():
+                if app['category'] == category:
+                    app['category'] = "Uncategorized"
+
+            # Remove category
+            del self.category_data[category]
+
+            self.save_data()
+            self.update_categories_tab()
+            self.update_gui()
+
+    def update_applications_list(self):
+        # Clear existing applications list
+        for widget in self.applications_frame.winfo_children()[1:]:  # Skip header
+            widget.destroy()
+
+        # Create application rows
+        for app_name, app_info in self.app_data.items():
+            row_frame = customtkinter.CTkFrame(self.applications_frame)
+            row_frame.pack(fill="x", pady=2)
+
+            # Application icon and name
+            icon_frame = customtkinter.CTkFrame(row_frame, width=200, height=50)
+            icon_frame.pack_propagate(False)
+            icon_frame.pack(side="left", padx=5)
+
+            if app_info['icon_path'] and os.path.exists(app_info['icon_path']):
+                icon_image = customtkinter.CTkImage(
+                    light_image=Image.open(app_info['icon_path']),
+                    size=(32, 32)
+                )
+                customtkinter.CTkLabel(icon_frame, image=icon_image, text="").pack(side="left")
+            customtkinter.CTkLabel(icon_frame, text=app_name).pack(side="left", padx=5)
+
+            # Category selector
+            category_var = customtkinter.StringVar(value=app_info['category'])
+            category_dropdown = customtkinter.CTkOptionMenu(
+                row_frame,
+                values=list(self.category_data.keys()) + ["Create New..."],
+                variable=category_var,
+                command=lambda val, app=app_name: self.handle_category_change(app, val),
+                width=150
+            )
+            category_dropdown.pack(side="left", padx=5)
 
     def minimize_to_tray(self):
         """Hide window and create tray icon"""
@@ -177,11 +393,93 @@ class App(customtkinter.CTk):
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             return "Unknown"
 
+    def get_active_app(self):
+        _, pid = win32process.GetWindowThreadProcessId(win32gui.GetForegroundWindow())
+
+        try:
+            return _, pid
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            return "Unknown"
+
     def create_default_icon(self):
-        """Create a default icon for apps without available icons"""
-        img = Image.new('RGBA', (32, 32), (0, 0, 0, 0))
-        return None
-        #return customtkinter.CTkImage(light_image=img, size=(32, 32))
+        """Create a default icon if it doesn't exist"""
+        if not os.path.exists(self.default_icon_path):
+            img = Image.new('RGBA', (32, 32), (0, 0, 0, 0))
+            img.save(self.default_icon_path)
+
+    def get_icon_path(self, hwnd):
+        """Get cached icon path for a window, create if needed"""
+        try:
+            # Get process information
+            _, pid = win32process.GetWindowThreadProcessId(win32gui.GetForegroundWindow())
+            process = psutil.Process(pid)
+            exe_path = process.exe()
+
+            if not exe_path:
+                return self.default_icon_path
+
+            # Create unique hash for the executable
+            hash_key = hashlib.md5(exe_path.encode()).hexdigest()
+            cache_path = os.path.join(self.cache_dir, f"{hash_key}.png")
+
+            if not os.path.exists(cache_path):
+                # Extract and save the icon
+                self.save_icon_from_exe(hwnd, exe_path, cache_path)
+
+            return cache_path
+
+        except Exception as e:
+            print(f"Error getting icon path: {e}")
+            return self.default_icon_path
+
+    def save_icon_from_exe(self, hwnd, exe_path, save_path):
+        """Safely extract and save application icon with handle validation"""
+        hicon = None
+        hdc = None
+        hbmp = None
+
+        try:
+            # Attempt to get icon from window handle
+            if hwnd and win32gui.IsWindow(hwnd):
+                hicon = win32gui.SendMessage(hwnd, win32con.WM_GETICON, win32con.ICON_BIG, 0)
+                if not hicon:
+                    hicon = win32gui.GetClassLong(hwnd, win32con.GCL_HICON)
+
+            # Fallback to executable extraction if still no handle
+            if not hicon and exe_path:
+                try:
+                    large_icons, _ = win32gui.ExtractIconEx(exe_path, 0)
+                    if large_icons:
+                        hicon = large_icons[0]
+                except Exception as ex:
+                    print(f"EXE icon extraction failed: {ex}")
+
+            # Final fallback to default icon
+            if not hicon:
+                print("No icon handles found, using default")
+                return self.default_icon_path
+
+            # Validate icon handle by trying to get its info
+            try:
+                icon_info = win32gui.GetIconInfo(hicon)
+            except Exception as e:
+                print(f"Invalid icon handle: {str(e)}")
+                return self.default_icon_path
+
+            # Rest of the code remains the same...
+            # ... [previous implementation] ...
+
+        except Exception as e:
+            print(f"Icon save error: {str(e)}")
+            if not os.path.exists(save_path):
+                Image.new('RGBA', (32, 32), (0, 0, 0, 0)).save(save_path)
+            return save_path
+
+        finally:
+            # Cleanup GDI objects
+            if hbmp: win32gui.DeleteObject(hbmp)
+            if hdc: win32gui.DeleteDC(hdc)
+            if hicon: win32gui.DestroyIcon(hicon)
 
     def get_icon_from_hwnd(self, hwnd):
         try:
@@ -296,11 +594,11 @@ class App(customtkinter.CTk):
 
     def monitor_active_window(self):
         last_title, last_process = None, None
-        hwnd = win32gui.GetForegroundWindow()
-        _, pid = win32process.GetWindowThreadProcessId(hwnd)
 
         while not self.stop_thread:
+            hwnd = win32gui.GetForegroundWindow()
             current_process = self.get_active_process()
+            _, pid = self.get_active_app()
             now = datetime.now()
 
             if current_process != self.current_app:
@@ -329,13 +627,80 @@ class App(customtkinter.CTk):
                 # Update current app info
                 self.current_app = current_process
                 self.app_data[self.current_app]['exe_path'] = exe_path
-                self.app_data[app_name]['icon_path'] = self.cache_application_icon(hwnd, app_name, exe_path)
+                self.app_data[app_name]['icon_path'] = self.get_icon_path(hwnd)
                 self.last_switch_time = now
                 self.save_data()
                 self.save_hourly_data()  # Save hourly data when switching apps
                 self.label.configure(text=current_process)
 
             time.sleep(1)  # Check every second
+
+    def update_chart(self):
+        self.chart_ax.clear()
+
+        # Get today's data
+        today = datetime.now().strftime("%Y-%m-%d")
+        hourly_data = defaultdict(lambda: defaultdict(float))
+
+        # Aggregate only today's data
+        if today in self.hourly_log:
+            for hour_str, apps in self.hourly_log[today].items():
+                hour = int(hour_str.split(':')[0])
+                for app, time in apps.items():
+                    category = self.app_data.get(app, {}).get('category', 'Unknown')
+                    hourly_data[hour][category] += time
+
+        if not hourly_data:
+            self.chart_ax.text(0.5, 0.5, 'No data today',
+                               ha='center', va='center', color='white', fontsize=12)
+            self.chart_canvas.draw()
+            return
+
+        # Prepare data for plotting
+        hours = range(24)  # Always show full 24-hour scale
+        categories = sorted({cat for h_data in hourly_data.values() for cat in h_data.keys()})
+        colors = plt.cm.tab20.colors
+
+        # Create stacked bar chart with zero-filled hours
+        bottom = [0] * 24
+        width = 0.8  # Bar width
+
+        for i, category in enumerate(categories):
+            times = []
+            for hour in hours:
+                # Get time for this category and hour (convert seconds to hours)
+                time = hourly_data.get(hour, {}).get(category, 0) / 3600
+                times.append(time)
+
+            bars = self.chart_ax.bar(
+                hours,
+                times,
+                width,
+                bottom=bottom,
+                label=f"{category} ({sum(times):.1f}h)",
+                color=colors[i]
+            )
+            bottom = [b + t for b, t in zip(bottom, times)]
+
+        # Configure chart appearance
+        self.chart_ax.set_xlabel('Hour of Day', color='white')
+        self.chart_ax.set_ylabel('Total Time (hours)', color='white')
+        self.chart_ax.set_title(f"Today's App Usage by Category ({datetime.now().strftime('%Y-%m-%d')})", color='white')
+        self.chart_ax.set_xticks(range(0, 24))
+        self.chart_ax.set_xticklabels([f"{h:02d}:00" for h in range(24)], rotation=45, color='white')
+        self.chart_ax.tick_params(axis='y', colors='white')
+        self.chart_ax.set_xlim(-0.5, 23.5)  # Full day range
+
+        # Create legend
+        self.chart_ax.legend(
+            loc='upper right',
+            facecolor='#2b2b2b',
+            labelcolor='white',
+            fontsize=8
+        )
+
+        # Redraw canvas
+        #self.chart_canvas.draw()
 
     def update_gui(self):
         """Update the GUI with current tracking data"""
@@ -349,6 +714,11 @@ class App(customtkinter.CTk):
         category_dict = defaultdict(list)
         for app, data in display_data.items():
             category_dict[data['category']].append((app, data['total_time']))
+
+        # Update chart every 5 seconds
+        if (datetime.now() - self.last_chart_update).total_seconds() > 5:
+            self.update_chart()
+            self.last_chart_update = datetime.now()
 
         # Update textbox
         self.textbox.configure(state="normal")

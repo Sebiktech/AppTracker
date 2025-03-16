@@ -11,6 +11,186 @@
       "pycharm64.exe": 12.021046,
       "ShellExperienceHost.exe": 5.004076,
       "explorer.exe": 2.002316
+    },
+    "17:00": {
+      "python.exe": 22.125719,
+      "pycharm64.exe": 31.022911,
+      "explorer.exe": 31.017262000000002,
+      "msedge.exe": 279.11733599999997
+    },
+    "21:00": {
+      "python.exe": 7.114458,
+      "pycharm64.exe": 41.022197,
+      "explorer.exe": 20.014824,
+      "Code.exe": 1.003495
+    }
+  },
+  "2025-03-14": {
+    "16:00": {
+      "python.exe": 52.246567999999996,
+      "pycharm64.exe": 50.030668,
+      "msedge.exe": 523.2411529999999,
+      "SearchHost.exe": 445.201967,
+      "steamwebhelper.exe": 27.020218,
+      "explorer.exe": 3.0066950000000006,
+      "dota2.exe": 95.05353600000001,
+      "dwm.exe": 4.015291,
+      "ShellExperienceHost.exe": 1.002607
+    },
+    "22:00": {
+      "python.exe": 53.249613999999994,
+      "pycharm64.exe": 140.076907,
+      "msedge.exe": 10.010863
+    }
+  },
+  "2025-03-15": {
+    "12:00": {
+      "python.exe": 575.922582,
+      "msedge.exe": 1286.5389249999998,
+      "pycharm64.exe": 318.147926,
+      "SearchHost.exe": 2.002525,
+      "AppleMusic.exe": 53.026011
+    },
+    "13:00": {
+      "python.exe": 176.27007300000002,
+      "AppleMusic.exe": 54.038345,
+      "msedge.exe": 312.163601,
+      "explorer.exe": 100.07980500000001,
+      "pycharm64.exe": 364.172052,
+      "Photos.exe": 4.0066489999999995
+    },
+    "14:00": {
+      "explorer.exe": 14.998346000000002,
+      "pycharm64.exe": 815.38523,
+      "msedge.exe": 2623.822059,
+      "python.exe": 137.152866,
+      "IntelGraphicsSoftware.exe": 1.002567
+    },
+    "15:00": {
+      "msedge.exe": 2669.9731500000003,
+      "python.exe": 467.72354499999994,
+      "pycharm64.exe": 257.146741,
+      "explorer.exe": 5.0065100000000005
+    },
+    "16:00": {
+      "msedge.exe": 3038.741346,
+      "pycharm64.exe": 390.164717,
+      "python.exe": 94.049673,
+      "explorer.exe": 67.029575,
+      "Unknown": 1.004921,
+      "AppleMusic.exe": 3.004881,
+      "SearchHost.exe": 6.004887
+    },
+    "17:00": {
+      "msedge.exe": 1115.2469789999998,
+      "pycharm64.exe": 143.06960199999997,
+      "python.exe": 361.284483,
+      "explorer.exe": 2.004951,
+      "AppleMusic.exe": 5.005575
+    },
+    "18:00": {
+      "python.exe": 160.05971499999998,
+      "msedge.exe": 2757.979587,
+      "pycharm64.exe": 367.162705,
+      "explorer.exe": 40.026872,
+      "AppleMusic.exe": 6.003533
+    },
+    "19:00": {
+      "msedge.exe": 2876.3790520000002,
+      "pycharm64.exe": 349.18630800000005,
+      "python.exe": 153.63791300000003,
+      "explorer.exe": 50.035047999999996,
+      "AppleMusic.exe": 1.002549,
+      "Photos.exe": 2.010054
+    },
+    "20:00": {
+      "msedge.exe": 3484.935278,
+      "SearchHost.exe": 2.006443,
+      "pycharm64.exe": 110.054389,
+      "WidgetBoard.exe": 3.00389
+    },
+    "21:00": {
+      "msedge.exe": 3380.527951,
+      "pycharm64.exe": 65.05770700000001,
+      "python.exe": 115.37706,
+      "explorer.exe": 14.008717
+    },
+    "22:00": {
+      "msedge.exe": 1123.7010989999999,
+      "SearchHost.exe": 3.003082,
+      "devenv.exe": 29.017722,
+      "python.exe": 1444.332627,
+      "pycharm64.exe": 397.219537,
+      "explorer.exe": 4.012700000000001,
+      "AppleMusic.exe": 67.041643
+    },
+    "23:00": {
+      "msedge.exe": 918.4236369999999,
+      "pycharm64.exe": 436.309627,
+      "explorer.exe": 28.046584,
+      "python.exe": 117.555664,
+      "AppleMusic.exe": 42.051343,
+      "CopilotNative.exe": 18.033688,
+      "ms-teams.exe": 23.112399
+    }
+  },
+  "2025-03-16": {
+    "12:00": {
+      "python.exe": 45.26519,
+      "msedge.exe": 1669.805973,
+      "Unknown": 1211.84466
+    },
+    "13:00": {
+      "Unknown": 996.487768,
+      "LockApp.exe": 765.124267,
+      "msedge.exe": 115.08001399999999,
+      "ShellExperienceHost.exe": 1.002704,
+      "python.exe": 11.456145,
+      "pycharm64.exe": 15.016823000000002,
+      "explorer.exe": 10.009003,
+      "CopilotNative.exe": 1558.25578
+    },
+    "14:00": {
+      "CopilotNative.exe": 564.763482,
+      "Unknown": 3035.236518
+    },
+    "15:00": {
+      "Unknown": 3600.0
+    },
+    "16:00": {
+      "Unknown": 3331.868782,
+      "LockApp.exe": 268.131218
+    },
+    "17:00": {
+      "Unknown": 857.8834009999999,
+      "explorer.exe": 1.007248,
+      "CopilotNative.exe": 5.005977,
+      "python.exe": 18.013002,
+      "msedge.exe": 2713.302652,
+      "LockApp.exe": 4.78772
+    },
+    "18:00": {
+      "msedge.exe": 3185.366142,
+      "python.exe": 92.714313,
+      "pycharm64.exe": 74.05016300000001,
+      "CopilotNative.exe": 18.014694,
+      "explorer.exe": 1.008079,
+      "ApplicationFrameHost.exe": 11.009815
+    },
+    "19:00": {
+      "msedge.exe": 3247.6230829999995,
+      "Unknown": 1.002222,
+      "SearchHost.exe": 6.00658,
+      "devenv.exe": 105.054519,
+      "pycharm64.exe": 106.09260200000001,
+      "python.exe": 48.363622,
+      "ms-teams.exe": 5.00355,
+      "ApplicationFrameHost.exe": 4.00498
+    },
+    "20:00": {
+      "msedge.exe": 1996.684334,
+      "explorer.exe": 3.016111,
+      "ms-teams.exe": 11.026667
     }
   }
 }
